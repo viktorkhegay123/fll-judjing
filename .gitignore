@@ -4,3 +4,6 @@ data.json.tmp
 *.log
 .claude/
 .impeccable/
+
+.vercel
+.env*
