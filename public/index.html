@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLL Judging</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070a22; --panel:#11153d; --card:#161a4a; --card2:#1c2158; --line:#2b3175; --text:#eef0ff; --muted:#9ba2d6;
+  --yellow:#f5c84b; --orange:#e0903f; --red:#ff5d6c; --blue:#3d55d6; --ok:#4fd18b;
+  --ip:#7b98ff; --rd:#5fcf8f; --hh:150px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Exo 2",system-ui,Segoe UI,Arial,sans-serif;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+a{color:var(--ip)}
+
+/* ---------- auth ---------- */
+#auth{min-height:100vh;display:grid;place-items:center;padding:16px}
+.auth-box{width:min(440px,100%);background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;letter-spacing:.5px}
+.brand .dot{width:12px;height:12px;border-radius:50%;background:var(--red);box-shadow:0 0 0 4px rgba(255,93,108,.2)}
+.tabs{display:flex;gap:6px;margin:18px 0;background:var(--bg);padding:4px;border-radius:12px}
+.tabs button{flex:1;border:0;background:none;padding:9px;border-radius:9px;color:var(--muted);font-weight:600}
+.tabs button.on{background:var(--blue);color:#fff}
+label.f{display:block;margin:10px 0 4px;font-size:13px;color:var(--muted);font-weight:600}
+input.i,select.i,textarea.i{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none}
+input.i:focus,select.i:focus,textarea.i:focus{border-color:var(--ip)}
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.roles label{border:1px solid var(--line);border-radius:10px;padding:9px 6px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;background:var(--bg)}
+.roles input{display:none}
+.roles.big{grid-template-columns:repeat(2,1fr);gap:8px}
+.roles.big.rooms{grid-template-columns:repeat(3,1fr)}
+.roles.big label{padding:12px 8px}
+.roles.big b{display:block;font-size:20px}
+.roles.big.rooms b{font-size:28px}
+.roles.big small{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.roles.dim{opacity:.35;pointer-events:none}
+.roles label:has(input:checked){border-color:var(--yellow);color:var(--yellow);background:rgba(245,200,75,.08)}
+.btn{border:0;border-radius:10px;padding:10px 16px;font-weight:700;background:var(--blue);color:#fff}
+.btn.big{width:100%;margin-top:18px;padding:12px}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.btn.y{background:var(--yellow);color:#151515}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.err{color:var(--red);min-height:20px;margin-top:10px;font-size:14px}
+
+/* ---------- header ---------- */
+#hdr{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+nav.top{display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+nav.top .brand{font-size:17px;margin-right:6px}
+.navtabs{display:flex;gap:4px}
+.navtabs button{border:0;background:none;color:var(--muted);padding:6px 12px;border-radius:8px;font-weight:600}
+.navtabs button.on{background:var(--card2);color:var(--text)}
+.who{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.who b{color:var(--text)}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;background:var(--card2);color:var(--text);white-space:nowrap}
+.pill.head{background:var(--yellow);color:#1a1a1a}
+.pill.org{background:var(--orange);color:#1a1a1a}
+.savest{font-size:12px}
+.savest.ok{color:var(--ok)} .savest.bad{color:var(--red)}
+
+.bar{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1.6fr) minmax(0,.9fr);border-bottom:1px solid var(--line)}
+.bar .cell{padding:8px 16px;min-width:0}
+.bar .cell+.cell{border-left:2px solid var(--line)}
+.lbl{font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbl .stage{color:var(--yellow);letter-spacing:.3px;text-transform:none;font-size:12px}
+.tcol{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.digits{font-size:44px;font-weight:800;line-height:1.05;color:var(--yellow);font-variant-numeric:tabular-nums;letter-spacing:1px}
+.digits.paused{color:var(--muted)} .digits.warn{color:var(--orange)} .digits.done{color:var(--ok);font-size:26px}
+.ctrls{display:flex;gap:6px;flex-wrap:wrap}
+.cbtn{border:1px solid var(--line);background:var(--card);border-radius:10px;height:40px;min-width:40px;padding:0 10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.cbtn.start{background:var(--ok);color:#0a2a18;border-color:transparent;padding:0 16px}
+.cbtn.pause{background:var(--orange);color:#2a1700;border-color:transparent;padding:0 16px}
+.cbtn svg{width:16px;height:16px}
+.tname{font-size:32px;font-weight:800;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tname.none{color:var(--muted);font-size:20px;font-weight:600}
+.sub{font-size:13px;color:var(--muted);margin-top:2px}
+.tslot{font-size:28px;font-weight:800;color:var(--yellow);white-space:nowrap}
+.stages{display:flex;gap:4px;padding:6px 16px;overflow-x:auto;scrollbar-width:none}
+.stages::-webkit-scrollbar{display:none}
+.st{position:relative;flex:1 0 auto;min-width:96px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:11px;line-height:1.25;overflow:hidden}
+.st b{display:block;font-size:12px;white-space:nowrap}
+.st span{color:var(--muted);white-space:nowrap}
+.st .fill{position:absolute;left:0;top:0;bottom:0;background:rgba(245,200,75,.18);z-index:0}
+.st>*:not(.fill){position:relative;z-index:1}
+.st.cur{border-color:var(--yellow)}
+.st.done{opacity:.45}
+.st.done b::after{content:" ✓";color:var(--ok)}
+
+/* ---------- main ---------- */
+main{max-width:1280px;margin:0 auto;padding:16px 16px 80px}
+h2.sec{font-size:15px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin:6px 0 10px}
+.slots{display:grid;gap:8px}
+.slot{display:grid;grid-template-columns:40px 120px minmax(0,1fr) auto;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;cursor:pointer}
+.slot:hover{border-color:#4650a8}
+.slot.sel{border-color:var(--ip);box-shadow:0 0 0 2px rgba(123,152,255,.25)}
+.slot .n{color:var(--yellow);font-weight:800;text-align:center}
+.slot .tm{color:var(--yellow);font-weight:700}
+.slot .nm{font-weight:700;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slot .nm .live{display:inline-block;margin-left:8px;font-size:11px;background:var(--red);color:#fff;border-radius:6px;padding:1px 6px;vertical-align:middle}
+.slot .right{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.chip{font-size:11px;padding:3px 7px;border-radius:7px;background:var(--bg);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.full{color:var(--ok);border-color:rgba(79,209,139,.4)}
+.chip.part{color:var(--yellow)}
+.lunch{background:var(--orange);color:#1b1205;text-align:center;font-weight:800;border-radius:12px;padding:10px}
+.layout{display:grid;grid-template-columns:340px minmax(0,1fr);gap:18px;align-items:start}
+.layout aside{position:sticky;top:calc(var(--hh) + 12px);max-height:calc(100vh - var(--hh) - 24px);overflow:auto}
+.layout aside .slot{grid-template-columns:28px minmax(0,1fr);row-gap:2px;padding:8px 10px}
+.layout aside .slot .tm{grid-column:2;font-size:12px}
+.layout aside .slot .n{grid-row:span 3}
+.layout aside .slot .nm{grid-column:2;font-size:15px}
+.layout aside .slot .right{grid-column:2;justify-content:flex-start}
+.callbtn{border:0;background:var(--yellow);color:#1a1a1a;font-weight:800;font-size:11px;border-radius:7px;padding:3px 8px}
+
+/* ---------- rubric ---------- */
+.teamhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.teamhead h1{margin:0;font-size:28px}
+.teamhead .meta{color:var(--muted)}
+.jump{display:flex;gap:6px;flex-wrap:wrap}
+.rubric{--c:var(--ip);background:var(--panel);border:1px solid var(--line);border-radius:16px;margin-bottom:18px}
+.rubric.rd{--c:var(--rd)}
+.rhead{position:sticky;top:var(--hh);z-index:5;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);border-radius:16px 16px 0 0}
+.rhead h2{margin:0;font-size:22px;color:var(--c)}
+.sums{display:flex;gap:8px;flex-wrap:wrap}
+.sum{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:4px 10px;font-size:13px;color:var(--muted)}
+.sum b{color:var(--text);font-size:16px}
+.lvlhead,.row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1fr)}
+.lvlhead div{padding:8px;text-align:center;font-weight:800;font-size:13px;letter-spacing:.5px;border-right:1px solid var(--line)}
+.lvlhead div:last-child{border-right:0}
+.lvlhead div small{display:block;font-size:16px}
+.lvlhead div:nth-child(1){background:color-mix(in srgb,var(--c) 10%,transparent)}
+.lvlhead div:nth-child(2){background:color-mix(in srgb,var(--c) 22%,transparent)}
+.lvlhead div:nth-child(3){background:color-mix(in srgb,var(--c) 36%,transparent)}
+.lvlhead div:nth-child(4){background:color-mix(in srgb,var(--c) 55%,transparent);color:#fff}
+.secttl{padding:10px 16px;background:color-mix(in srgb,var(--c) 14%,var(--panel));border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:14px}
+.secttl b{font-size:16px;letter-spacing:.5px}
+.row{border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.lv{position:relative;display:flex;gap:10px;align-items:flex-start;text-align:left;border:0;border-right:1px solid var(--line);background:transparent;padding:12px;min-height:64px;font-size:14px;line-height:1.3;transition:background .12s}
+.lv:last-child{border-right:0}
+.lv:hover{background:rgba(255,255,255,.04)}
+.lv .ic{flex:0 0 26px;width:26px;height:26px;display:grid;place-items:center;border:2px solid var(--muted);border-radius:6px;color:transparent}
+.lv .ic.g{border:0;color:var(--muted)}
+.lv .ic svg{width:26px;height:26px}
+.lv.sel{background:color-mix(in srgb,var(--c) 26%,transparent)}
+.lv.sel .ic{background:var(--c);border-color:var(--c);color:#0b0f2c}
+.lv.sel .ic.g{background:none;color:var(--c)}
+.lv .ck{display:none;position:absolute;inset:auto 0 0 0}
+.lv.sel .ic:not(.g)::after{content:"✓";color:#0b0f2c;font-weight:900}
+.lv.sel .ic.g::after{content:"✓";position:absolute;color:#0b0f2c;font-weight:900;font-size:13px}
+.lv .ic.g{position:relative}
+.lv.sel .ic.g svg{fill:var(--c)}
+.lv4{display:flex;flex-direction:column;border-right:0}
+.lv4 .lv{border-right:0;min-height:48px;width:100%}
+.lv4 .lv .t{color:var(--muted);font-style:italic}
+.lv4 textarea{display:none;margin:0 10px 10px;width:calc(100% - 20px);min-height:56px;resize:vertical;background:var(--bg);border:1px solid var(--c);border-radius:8px;padding:6px 8px;font-size:13px}
+.lv4.sel textarea{display:block}
+.lv4.sel .lv{background:color-mix(in srgb,var(--c) 26%,transparent)}
+.lv4.sel .lv .ic{background:var(--c);border-color:var(--c)}
+.lv4.sel .lv .ic.g{background:none}
+.lv4.sel .lv .ic.g svg{fill:var(--c)}
+.lv4.sel .lv .ic:not(.g)::after,.lv4.sel .lv .ic.g::after{content:"✓";color:#0b0f2c;font-weight:900}
+.lv4.sel .lv .ic.g::after{position:absolute;font-size:13px}
+.row.empty .lv .ic{border-color:#5a619c}
+.note{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px;padding:10px 16px;font-style:italic}
+.note svg{width:20px;height:20px;flex:0 0 20px}
+.awards{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:18px}
+.awards h2{margin:0 0 8px;font-size:18px}
+.aw{display:grid;grid-template-columns:28px 200px minmax(0,1fr);gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line);cursor:pointer}
+.aw input{width:22px;height:22px;accent-color:var(--yellow)}
+.aw b{font-size:16px}
+.aw span{color:var(--muted);font-size:14px}
+.empty-state{background:var(--panel);border:1px dashed var(--line);border-radius:16px;padding:40px;text-align:center;color:var(--muted)}
+
+/* ---------- results ---------- */
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:7px;color:var(--muted);font-weight:600}
+.seg button.on{background:var(--blue);color:#fff}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table.res{border-collapse:collapse;width:100%;min-width:1080px;font-size:14px}
+table.res th,table.res td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+table.res thead th{background:var(--card2);font-size:12px;letter-spacing:.4px;color:var(--muted);font-weight:700}
+table.res thead tr:first-child th{font-size:13px;color:var(--text)}
+table.res th.ip{color:var(--ip)!important} table.res th.rd{color:var(--rd)!important} table.res th.cv{color:var(--yellow)!important}
+table.res td.team{text-align:left;font-weight:700}
+table.res td.pct{font-weight:800;font-size:15px}
+table.res td.pct.ip{color:var(--ip)} table.res td.pct.rd{color:var(--rd)} table.res td.pct.cv{color:var(--yellow)}
+table.res td.grp,table.res th.grp{border-left:2px solid var(--line)}
+table.res tr:hover td{background:rgba(255,255,255,.03)}
+table.res .mut{color:var(--muted)}
+.jn{font-size:11px;color:var(--muted);display:block}
+.formula{color:var(--muted);font-size:13px;margin:10px 2px;line-height:1.5}
+
+/* admin */
+.adm{display:grid;gap:18px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+.box h3{margin:0 0 10px}
+.sched-row{display:grid;grid-template-columns:30px 130px repeat(3,minmax(0,1fr));gap:6px;margin-bottom:6px;align-items:center}
+.sched-row .n{color:var(--yellow);font-weight:800;text-align:center}
+table.users{width:100%;border-collapse:collapse;font-size:14px}
+table.users td,table.users th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--card2);border:1px solid var(--line);padding:10px 16px;border-radius:10px;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr}
+  .layout aside{position:static;max-height:none}
+}
+@media (max-width:760px){
+  .bar{grid-template-columns:1fr 1fr}
+  .bar .cell.timer{grid-column:1/-1;border-bottom:1px solid var(--line)}
+  .bar .cell.team{border-left:0}
+  .digits{font-size:36px}
+  .tname{font-size:22px} .tslot{font-size:20px}
+  .lvlhead{display:none}
+  .row{grid-template-columns:1fr}
+  .lv{border-right:0;border-bottom:1px solid var(--line);min-height:auto}
+  .lv::before{content:attr(data-lvl);position:absolute;right:8px;top:6px;font-size:10px;color:var(--muted);font-weight:700}
+  .aw{grid-template-columns:28px 1fr}
+  .aw span{grid-column:2}
+  .slot{grid-template-columns:30px minmax(0,1fr)}
+  .slot .tm,.slot .nm,.slot .right{grid-column:2}
+  .slot .n{grid-row:span 3}
+  .sched-row{grid-template-columns:24px 1fr 1fr}
+  .sched-row input:nth-of-type(n+2){grid-column:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ AUTH ============ -->
+<section id="auth" class="hidden">
+  <div class="auth-box">
+    <div class="brand"><span class="dot"></span>FLL Judging</div>
+    <div class="tabs"><button data-t="login" class="on">Вход</button><button data-t="reg">Регистрация</button></div>
+    <form id="loginForm">
+      <label class="f">Логин</label><input class="i" name="username" autocomplete="username" required>
+      <label class="f">Пароль</label><input class="i" name="password" type="password" autocomplete="current-password" required>
+      <button class="btn big">Войти</button>
+    </form>
+    <form id="regForm" class="hidden">
+      <label class="f">1. Кто вы в комнате?</label>
+      <div class="roles big">
+        <label><input type="radio" name="role" value="head" checked><b>Head Judge</b><small>управляет таймером</small></label>
+        <label><input type="radio" name="role" value="judge"><b>Судья</b><small>обычный судья</small></label>
+      </div>
+      <div id="roomField"><label class="f">2. Ваша комната</label>
+        <div class="roles big rooms">
+          <label><input type="radio" name="room" value="1" checked><b>1</b><small>Комната</small></label>
+          <label><input type="radio" name="room" value="2"><b>2</b><small>Комната</small></label>
+          <label><input type="radio" name="room" value="3"><b>3</b><small>Комната</small></label>
+        </div></div>
+      <label class="f">3. Имя судьи (как будет видно в таблице)</label><input class="i" name="name" required>
+      <label class="f">Логин</label><input class="i" name="username" autocomplete="username" required>
+      <label class="f">Пароль</label><input class="i" name="password" type="password" autocomplete="new-password" minlength="4" required>
+      <label class="f" style="font-weight:400"><input type="checkbox" id="isOrg" style="vertical-align:middle"> Я организатор (без комнаты)</label>
+      <div id="orgField" class="hidden"><label class="f">Код организатора</label><input class="i" name="orgCode"></div>
+      <button class="btn big">Зарегистрироваться</button>
+    </form>
+    <div class="err" id="authErr"></div>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hidden">
+  <header id="hdr">
+    <nav class="top">
+      <div class="brand"><span class="dot"></span>FLL Judging</div>
+      <div class="navtabs" id="navtabs"></div>
+      <select id="orgRoom" class="i hidden" style="width:auto;padding:5px 8px"></select>
+      <div class="who"><span class="savest" id="savest"></span><span id="whoami"></span><button class="btn ghost" id="logout" style="padding:5px 10px">Выйти</button></div>
+    </nav>
+    <div class="bar">
+      <div class="cell timer">
+        <div class="lbl">Timer · <span class="stage" id="stageName"></span></div>
+        <div class="tcol"><div class="digits" id="digits">--:--</div><div class="ctrls" id="ctrls"></div></div>
+      </div>
+      <div class="cell team">
+        <div class="lbl">Team name</div>
+        <div class="tname" id="tname"></div>
+        <div class="sub" id="tsub"></div>
+      </div>
+      <div class="cell time">
+        <div class="lbl">Time</div>
+        <div class="tslot" id="tslot">—</div>
+        <div class="sub" id="clock"></div>
+      </div>
+    </div>
+    <div class="stages" id="stages"></div>
+  </header>
+  <main id="main"></main>
+</div>
+
+<script src="/rubrics.js"></script>
+<script>
+const { STAGES, LEVELS, RUBRICS, AWARDS, ROOMS, scoreRubric } = window.FLL;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ls = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+const GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4.9a7.5 7.5 0 0 0-2.6-1.5L14 2.4h-4l-.4 2.5A7.5 7.5 0 0 0 7 6.4l-2.4-.9-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-.9a7.5 7.5 0 0 0 2.6 1.5l.4 2.5h4l.4-2.5a7.5 7.5 0 0 0 2.6-1.5l2.4.9 2-3.4-2-1.6Z"/></svg>';
+const ICON = {
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>',
+  next: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 4v16l10-8zM16 4h3v16h-3z"/></svg>',
+  prev: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 4v16L9 12zM5 4h3v16H5z"/></svg>',
+  reset: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v5h5"/></svg>',
+};
+const ROLE = { head: 'Head Judge', judge: 'Судья', org: 'Организатор' };
+
+const S = {
+  token: ls.get('fll_token'), user: null, state: null, offset: 0,
+  selKey: null, lastTimerKey: undefined, drafts: {}, dirty: new Set(),
+  view: 'sessions', orgRoom: 1, results: null, resRoom: 0, resSort: 'n',
+  saving: false, saveErr: false, lastSaved: null, beeped: {}, users: null,
+};
+
+// ---------- API ----------
+async function api(path, opts = {}) {
+  const r = await fetch(path, {
+    method: opts.method || 'GET',
+    headers: { 'Content-Type': 'application/json', ...(S.token ? { Authorization: 'Bearer ' + S.token } : {}) },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401 && S.user) { doLogout(true); }
+  if (!r.ok) throw new Error(j.error || 'Ошибка ' + r.status);
+  return j;
+}
+function toast(msg) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 2600);
+}
+
+// ---------- звук ----------
+let actx;
+function audio() { try { actx ??= new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch {} return actx; }
+function beep(times = 1, freq = 880, len = 0.18) {
+  const a = audio(); if (!a) return;
+  for (let i = 0; i < times; i++) {
+    const o = a.createOscillator(), g = a.createGain(), t0 = a.currentTime + i * (len + 0.12);
+    o.frequency.value = freq; o.type = 'sine';
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.35, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + len);
+    o.connect(g).connect(a.destination); o.start(t0); o.stop(t0 + len + 0.05);
+  }
+}
+document.addEventListener('pointerdown', audio, { once: true });
+
+// ---------- AUTH ----------
+function showAuth() {
+  $('#app').classList.add('hidden'); $('#auth').classList.remove('hidden');
+}
+$$('.tabs button').forEach((b) => b.onclick = () => {
+  $$('.tabs button').forEach((x) => x.classList.toggle('on', x === b));
+  $('#loginForm').classList.toggle('hidden', b.dataset.t !== 'login');
+  $('#regForm').classList.toggle('hidden', b.dataset.t !== 'reg');
+  $('#authErr').textContent = '';
+});
+$('#isOrg').onchange = () => {
+  const org = $('#isOrg').checked;
+  $$('#regForm .roles').forEach((x) => x.classList.toggle('dim', org));
+  $('#orgField').classList.toggle('hidden', !org);
+};
+async function authSubmit(e, path) {
+  e.preventDefault();
+  const body = Object.fromEntries(new FormData(e.target));
+  if (e.target.id === 'regForm' && $('#isOrg').checked) { body.role = 'org'; delete body.room; }
+  try {
+    const r = await api(path, { method: 'POST', body });
+    S.token = r.token; ls.set('fll_token', r.token); S.user = r.user;
+    startApp();
+  } catch (err) { $('#authErr').textContent = err.message; }
+}
+$('#loginForm').onsubmit = (e) => authSubmit(e, '/api/login');
+$('#regForm').onsubmit = (e) => authSubmit(e, '/api/register');
+$('#logout').onclick = () => doLogout();
+async function doLogout(silent) {
+  if (!silent && S.dirty.size && !confirm('Есть несохранённые оценки. Всё равно выйти?')) return;
+  if (!silent) { try { await api('/api/logout', { method: 'POST' }); } catch {} }
+  ls.del('fll_token'); S.token = null; S.user = null; S.state = null; S.drafts = {}; S.dirty.clear(); S.lastTimerKey = undefined; S.selKey = null;
+  clearInterval(S.poll); showAuth();
+}
+
+// ---------- старт ----------
+async function boot() {
+  if (!S.token) return showAuth();
+  try { S.user = (await api('/api/me')).user; startApp(); } catch { showAuth(); }
+}
+function startApp() {
+  $('#auth').classList.add('hidden'); $('#app').classList.remove('hidden');
+  const u = S.user;
+  $('#whoami').innerHTML = `<b>${esc(u.name)}</b> <span class="pill ${u.role}">${ROLE[u.role]}</span>${u.room ? ` <span class="pill">Комната ${u.room}</span>` : ''}`;
+  const tabs = [['sessions', u.role === 'org' ? 'Комнаты' : 'Сессии'], ['results', 'Результаты']];
+  if (u.role === 'org') tabs.push(['admin', 'Настройки']);
+  $('#navtabs').innerHTML = tabs.map(([k, t]) => `<button data-v="${k}">${t}</button>`).join('');
+  $$('#navtabs button').forEach((b) => b.onclick = () => setView(b.dataset.v));
+  const sel = $('#orgRoom');
+  sel.classList.toggle('hidden', u.role !== 'org');
+  sel.innerHTML = Array.from({ length: ROOMS }, (_, i) => `<option value="${i + 1}">Комната ${i + 1}</option>`).join('');
+  sel.onchange = () => { S.orgRoom = Number(sel.value); S.lastTimerKey = undefined; S.selKey = null; refresh(); };
+  // восстановить несохранённые черновики (если пропадал Wi-Fi)
+  const back = ls.get('fll_backup_' + u.id);
+  if (back) { S.drafts = back.drafts || {}; (back.dirty || []).forEach((k) => S.dirty.add(k)); }
+  setView('sessions');
+  refresh().then(flushSaves);
+  clearInterval(S.poll);
+  S.pollN = 0;
+  S.poll = setInterval(() => {
+    if (document.hidden) return;                 // вкладка свёрнута — не нагружаем сервер
+    S.pollN++;
+    if (S.view === 'results') { if (S.pollN % 2 === 0) loadResults(); }
+    else if (S.view === 'sessions') refresh();
+  }, 3000);
+}
+function setView(v) {
+  S.view = v;
+  $$('#navtabs button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
+  if (v === 'sessions') { renderSessions(true); }
+  else if (v === 'results') { $('#main').innerHTML = '<div class="empty-state">Загрузка…</div>'; loadResults(); }
+  else if (v === 'admin') renderAdmin();
+}
+
+// ---------- состояние комнаты ----------
+const room = () => (S.user.role === 'org' ? S.orgRoom : S.user.room);
+function slotByKey(key) {
+  if (!S.state || !key) return null;
+  const [n, r] = key.split('-').map(Number);
+  const s = S.state.schedule.slots.find((x) => x.n === n);
+  return s ? { key, n, room: r, time: s.time, team: s.teams[r - 1] } : null;
+}
+async function refresh() {
+  if (!S.user) return;
+  let st;
+  try { st = await api('/api/state' + (S.user.role === 'org' ? '?room=' + S.orgRoom : '')); }
+  catch { return; }
+  applyState(st);
+}
+function applyState(st) {
+  S.offset = st.now - Date.now();
+  const prevSel = S.selKey;
+  S.state = st;
+  const tk = st.timer.key;
+  if (tk !== S.lastTimerKey) {               // Head Judge вызвал новую команду — переключаемся на неё
+    if (S.lastTimerKey !== undefined || !S.selKey) S.selKey = tk || S.selKey;
+    S.lastTimerKey = tk;
+  }
+  if (!S.selKey && st.schedule.slots[0]) S.selKey = `${st.schedule.slots[0].n}-${st.room}`;
+  renderHeader();
+  if (S.view === 'sessions') renderSessions(prevSel !== S.selKey);
+}
+
+// ---------- шапка / таймер ----------
+const sNow = () => Date.now() + S.offset;
+function timerCalc() {
+  const t = S.state?.timer;
+  if (!t) return null;
+  if (t.stage >= STAGES.length) return { done: true, t };
+  const dur = STAGES[t.stage].min * 60000;
+  const el = t.acc + (t.running ? sNow() - t.startedAt : 0);
+  return { t, dur, el, rem: Math.max(0, dur - el), stage: STAGES[t.stage] };
+}
+const mmss = (ms) => { const s = Math.ceil(ms / 1000); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+function canControl() { return S.user && (S.user.role === 'head' || S.user.role === 'org'); }
+function renderHeader() {
+  if (!S.state) return;
+  const c = timerCalc(), t = c.t, slot = slotByKey(t.key);
+  $('#tname').textContent = slot ? (slot.team || '—') : 'Команда не выбрана';
+  $('#tname').classList.toggle('none', !slot);
+  $('#tsub').textContent = slot ? `Комната ${slot.room} · №${slot.n}` : (canControl() ? 'Нажмите «Вызвать» у команды в списке' : 'Ждём, пока Head Judge вызовет команду');
+  $('#tslot').textContent = slot ? slot.time : '—';
+  // этапы
+  $('#stages').innerHTML = STAGES.map((s, i) =>
+    `<div class="st ${i < t.stage ? 'done' : ''} ${i === t.stage ? 'cur' : ''}" data-i="${i}"><div class="fill"></div><b>${esc(s.title)}</b><span>${esc(s.sub.replace(/ \(.*\)/, ''))} · ${s.min} мин</span></div>`).join('');
+  // кнопки
+  let h = '';
+  if (canControl()) {
+    if (c.done) {
+      const next = nextKey(t.key);
+      h = next ? `<button class="cbtn start" data-a="select" data-k="${next}">${ICON.play}Следующая команда</button>` : '';
+      h += `<button class="cbtn" data-a="prev" title="Предыдущий этап">${ICON.prev}</button>`;
+    } else {
+      h = t.running
+        ? `<button class="cbtn pause" data-a="pause">${ICON.pause}Пауза</button>`
+        : `<button class="cbtn start" data-a="start" ${t.key ? '' : 'disabled'}>${ICON.play}Старт</button>`;
+      h += `<button class="cbtn" data-a="prev" title="Предыдущий этап">${ICON.prev}</button>
+            <button class="cbtn" data-a="next" title="Следующий этап">${ICON.next}</button>
+            <button class="cbtn" data-a="reset" title="Сбросить этап">${ICON.reset}</button>`;
+    }
+  } else if (!c.done) {
+    h = `<span class="chip">${t.running ? 'идёт' : 'на паузе'}</span>`;
+  }
+  $('#ctrls').innerHTML = h;
+  $$('#ctrls [data-a]').forEach((b) => b.onclick = () => timer(b.dataset.a, b.dataset.k));
+  tick();
+  measureHeader();
+}
+function tick() {
+  if (!S.state) return;
+  const c = timerCalc(), d = $('#digits');
+  $('#clock').textContent = 'Сейчас ' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  if (c.done) {
+    d.textContent = 'Сессия завершена'; d.className = 'digits done'; $('#stageName').textContent = 'все этапы пройдены';
+    return;
+  }
+  const { t, rem, dur, stage } = c;
+  d.textContent = mmss(rem);
+  d.className = 'digits' + (!t.running ? ' paused' : rem <= 30000 ? ' warn' : '');
+  $('#stageName').textContent = `${stage.title} — ${stage.sub}`;
+  const fill = $(`#stages .st[data-i="${t.stage}"] .fill`);
+  if (fill) fill.style.width = Math.min(100, (c.el / dur) * 100) + '%';
+  if (t.running) {
+    const id = t.seq + ':' + t.stage;
+    if (rem <= 30000 && rem > 0 && !S.beeped[id + 'w'] && dur > 60000) { S.beeped[id + 'w'] = 1; beep(1, 660, 0.12); }
+    if (rem <= 0 && !S.beeped[id]) { S.beeped[id] = 1; beep(3, 990, 0.22); setTimeout(refresh, 400); }
+  }
+}
+setInterval(tick, 250);
+async function timer(action, key) {
+  audio();
+  try {
+    const r = await api('/api/timer', { method: 'POST', body: { action, key, room: room() } });
+    S.state.timer = r.timer; S.offset = r.now - Date.now();
+    if (action === 'select') { S.lastTimerKey = key; S.selKey = key; renderSessions(true); }
+    renderHeader();
+  } catch (e) { toast(e.message); }
+}
+function nextKey(key) {
+  if (!S.state) return null;
+  const slots = S.state.schedule.slots, r = room();
+  const i = key ? slots.findIndex((s) => `${s.n}-${r}` === key) : -1;
+  const s = slots[i + 1];
+  return s ? `${s.n}-${r}` : null;
+}
+function measureHeader() {
+  document.documentElement.style.setProperty('--hh', $('#hdr').offsetHeight + 'px');
+}
+new ResizeObserver(measureHeader).observe(document.getElementById('hdr'));
+document.addEventListener('keydown', (e) => {
+  if (e.code !== 'Space' || !canControl() || S.view !== 'sessions' || /INPUT|TEXTAREA|SELECT|BUTTON/.test(document.activeElement.tagName)) return;
+  e.preventDefault();
+  const t = S.state?.timer; if (!t || t.stage >= STAGES.length) return;
+  timer(t.running ? 'pause' : 'start');
+});
+
+// ---------- список команд ----------
+function statusChips(key) {
+  const list = (S.state.status[key] || []).filter((j) => j.ipFilled || j.rdFilled);
+  if (!list.length) return '<span class="chip">нет оценок</span>';
+  return list.map((j) => {
+    const full = j.ipFilled === 10 && j.rdFilled === 10;
+    return `<span class="chip ${full ? 'full' : 'part'}" title="${esc(j.name)}">${j.role === 'head' ? 'HJ' : 'J'} · ИП ${j.ipFilled}/10 · ДР ${j.rdFilled}/10</span>`;
+  }).join('');
+}
+function slotList() {
+  const st = S.state, r = st.room, breaks = st.schedule.breaks || [];
+  let h = '';
+  for (const s of st.schedule.slots) {
+    const key = `${s.n}-${r}`, live = st.timer.key === key && st.timer.stage < STAGES.length;
+    h += `<div class="slot ${S.selKey === key ? 'sel' : ''}" data-k="${key}">
+      <div class="n">${s.n}</div><div class="tm">${esc(s.time)}</div>
+      <div class="nm">${esc(s.teams[r - 1] || '—')}${live ? '<span class="live">СЕЙЧАС</span>' : ''}</div>
+      <div class="right">${statusChips(key)}${canControl() && st.timer.key !== key ? `<button class="callbtn" data-call="${key}">▶ Вызвать</button>` : ''}</div>
+    </div>`;
+    const b = breaks.find((x) => x.after === s.n);
+    if (b) h += `<div class="lunch">${esc(b.label)}</div>`;
+  }
+  return h;
+}
+function bindList(root) {
+  $$('.slot', root).forEach((el) => el.onclick = (e) => {
+    const call = e.target.closest('[data-call]');
+    if (call) {
+      const t = S.state.timer;
+      if (t.running && !confirm('Таймер текущей команды ещё идёт. Переключить на другую команду?')) return;
+      return timer('select', call.dataset.call);
+    }
+    S.selKey = el.dataset.k; renderSessions(true);
+  });
+}
+function renderSessions(full) {
+  if (!S.state) { $('#main').innerHTML = '<div class="empty-state">Загрузка…</div>'; return; }
+  const isOrg = S.user.role === 'org';
+  if (full || !$('#slotList')) {
+    $('#main').innerHTML = isOrg
+      ? `<h2 class="sec">Комната ${S.state.room} — расписание и статус оценок</h2><div class="slots" id="slotList"></div>`
+      : `<div class="layout"><aside><h2 class="sec">Комната ${S.state.room}</h2><div class="slots" id="slotList"></div></aside><section id="rubricArea"></section></div>`;
+    if (!isOrg) renderRubric();
+  }
+  const list = $('#slotList');
+  list.innerHTML = slotList(); bindList(list);
+}
+
+// ---------- рубрики ----------
+function draft(key) {
+  if (!S.drafts[key]) {
+    const m = S.state.mine[key] || {};
+    S.drafts[key] = { ip: { ...(m.ip || {}) }, rd: { ...(m.rd || {}) }, comments: { ...(m.comments || {}) }, awards: [...(m.awards || [])], notes: m.notes || '' };
+  }
+  return S.drafts[key];
+}
+function renderRubric() {
+  const area = $('#rubricArea'); if (!area) return;
+  const slot = slotByKey(S.selKey);
+  if (!slot) { area.innerHTML = '<div class="empty-state">Выберите команду слева</div>'; return; }
+  const d = draft(slot.key);
+  let h = `<div class="teamhead"><div><div class="meta">Оценивает: ${esc(S.user.name)} · ${ROLE[S.user.role]} · Комната ${slot.room}</div>
+    <h1>${esc(slot.team || '—')}</h1><div class="meta">№${slot.n} · ${esc(slot.time)}</div></div>
+    <div class="jump"><button class="btn ghost" data-j="r-ip">Инновационный проект</button><button class="btn ghost" data-j="r-rd">Дизайн робота</button><button class="btn ghost" data-j="r-aw">Номинации</button></div></div>`;
+  for (const r of RUBRICS) {
+    h += `<section class="rubric ${r.key}" id="r-${r.key}">
+      <div class="rhead"><h2>${esc(r.title)}</h2><div class="sums" id="sum-${r.key}"></div></div>
+      <div class="lvlhead">${LEVELS.map((l, i) => `<div>${l}<small>${i + 1}</small></div>`).join('')}</div>`;
+    for (const sec of r.sections) {
+      h += `<div class="secttl"><b>${esc(sec.title)}</b> — ${esc(sec.desc)}</div>`;
+      for (const row of sec.rows) {
+        const v = Number(d[r.key][row.id]) || 0;
+        const ic = row.gear ? `<span class="ic g">${GEAR}</span>` : '<span class="ic"></span>';
+        h += `<div class="row ${v ? '' : 'empty'}" data-r="${r.key}" data-row="${row.id}">`;
+        row.l.forEach((txt, i) => {
+          h += `<button class="lv ${v === i + 1 ? 'sel' : ''}" data-v="${i + 1}" data-lvl="${LEVELS[i]} · ${i + 1}">${ic}<span class="t">${esc(txt)}</span></button>`;
+        });
+        h += `<div class="lv4 ${v === 4 ? 'sel' : ''}"><button class="lv" data-v="4" data-lvl="${LEVELS[3]} · 4">${ic}<span class="t">Превосходящий — в чём превосходство команды?</span></button>
+          <textarea data-c="${row.id}" placeholder="Краткий комментарий…">${esc(d.comments[row.id] || '')}</textarea></div></div>`;
+      }
+    }
+    h += `<div class="note">${GEAR}Критерии с шестерёнкой одинаково учитываются в оценках проекта и основных ценностей (Core Values).</div></section>`;
+  }
+  h += `<section class="awards" id="r-aw"><h2>Номинации</h2><div class="meta" style="color:var(--muted);margin-bottom:6px">Если команда претендует на одну из этих наград, поставьте галочку:</div>
+    ${AWARDS.map((a) => `<label class="aw"><input type="checkbox" data-aw="${a.key}" ${d.awards.includes(a.key) ? 'checked' : ''}><b>${esc(a.title)}</b><span>${esc(a.desc)}</span></label>`).join('')}
+    <label class="f" style="margin-top:14px">Заметки (видите только вы)</label>
+    <textarea class="i" id="notes" rows="3" placeholder="Заметки для обсуждения с другим судьёй…">${esc(d.notes)}</textarea></section>`;
+  area.innerHTML = h;
+  updateSums();
+
+  $$('.lv', area).forEach((b) => b.onclick = () => {
+    const row = b.closest('.row'), rk = row.dataset.r, id = row.dataset.row, v = Number(b.dataset.v);
+    const dd = draft(S.selKey);
+    dd[rk][id] = dd[rk][id] === v ? undefined : v;
+    if (!dd[rk][id]) delete dd[rk][id];
+    const cur = dd[rk][id] || 0;
+    $$('.lv', row).forEach((x) => x.classList.toggle('sel', Number(x.dataset.v) === cur && x.parentElement === row));
+    $('.lv4', row).classList.toggle('sel', cur === 4);
+    $('.lv4 .lv', row).classList.remove('sel');
+    row.classList.toggle('empty', !cur);
+    if (cur === 4) setTimeout(() => $('textarea', row).focus(), 0);
+    updateSums(); markDirty(S.selKey);
+  });
+  $$('textarea[data-c]', area).forEach((t) => t.oninput = () => { draft(S.selKey).comments[t.dataset.c] = t.value; markDirty(S.selKey); });
+  $$('input[data-aw]', area).forEach((c) => c.onchange = () => {
+    const dd = draft(S.selKey); dd.awards = dd.awards.filter((x) => x !== c.dataset.aw); if (c.checked) dd.awards.push(c.dataset.aw);
+    markDirty(S.selKey);
+  });
+  $('#notes').oninput = (e) => { draft(S.selKey).notes = e.target.value; markDirty(S.selKey); };
+  $$('[data-j]', area).forEach((b) => b.onclick = () => {
+    const el = document.getElementById(b.dataset.j);
+    window.scrollTo({ top: el.getBoundingClientRect().top + scrollY - $('#hdr').offsetHeight - 8, behavior: 'smooth' });
+  });
+}
+function updateSums() {
+  const d = draft(S.selKey);
+  for (const r of RUBRICS) {
+    const s = scoreRubric(r.key, d[r.key]);
+    const el = $('#sum-' + r.key);
+    if (el) el.innerHTML = `<span class="sum">Баллы <b>${s.total}</b>/40</span><span class="sum">⚙ <b>${s.gear}</b>/20</span><span class="sum">Заполнено <b style="color:${s.filled === s.rows ? 'var(--ok)' : 'var(--yellow)'}">${s.filled}</b>/${s.rows}</span>`;
+  }
+}
+
+// ---------- сохранение ----------
+function backup() { ls.set('fll_backup_' + S.user.id, { drafts: Object.fromEntries([...S.dirty].map((k) => [k, S.drafts[k]])), dirty: [...S.dirty] }); }
+function markDirty(key) {
+  S.dirty.add(key); backup(); showSave();
+  clearTimeout(S.saveT); S.saveT = setTimeout(flushSaves, 600);
+}
+async function flushSaves() {
+  if (S.saving || !S.dirty.size || !S.user) return;
+  S.saving = true; showSave();
+  for (const key of [...S.dirty]) {
+    const d = S.drafts[key]; if (!d) { S.dirty.delete(key); continue; }
+    const snapshot = JSON.stringify(d);
+    try {
+      await api('/api/score', { method: 'PUT', body: { key, ...d } });
+      if (S.state) S.state.mine[key] = JSON.parse(snapshot);
+      if (JSON.stringify(S.drafts[key]) === snapshot) S.dirty.delete(key);
+      S.saveErr = false; S.lastSaved = new Date();
+    } catch (e) { S.saveErr = true; }
+  }
+  S.saving = false; backup(); showSave();
+  if (S.dirty.size) { clearTimeout(S.saveT); S.saveT = setTimeout(flushSaves, S.saveErr ? 3000 : 300); }
+}
+function showSave() {
+  const el = $('#savest');
+  if (S.saveErr) { el.className = 'savest bad'; el.textContent = 'Нет связи — оценки сохранены на устройстве, повторяю…'; }
+  else if (S.dirty.size || S.saving) { el.className = 'savest'; el.textContent = 'Сохраняю…'; }
+  else if (S.lastSaved) { el.className = 'savest ok'; el.textContent = '✓ Сохранено ' + S.lastSaved.toLocaleTimeString('ru-RU'); }
+  else el.textContent = '';
+}
+window.addEventListener('beforeunload', (e) => { if (S.dirty.size) { e.preventDefault(); e.returnValue = ''; } });
+
+// ---------- результаты ----------
+async function loadResults() {
+  try { S.results = (await api('/api/results')).rows; } catch (e) { return; }
+  if (S.view === 'results') renderResults();
+}
+const f2 = (x) => (Math.round(x * 100) / 100).toFixed(2);
+function renderResults() {
+  let rows = S.results.filter((r) => !S.resRoom || r.room === S.resRoom);
+  const sorters = { n: (a, b) => a.n - b.n || a.room - b.room, ip: (a, b) => b.ipPct - a.ipPct, rd: (a, b) => b.rdPct - a.rdPct, cv: (a, b) => b.cvPct - a.cvPct };
+  rows = [...rows].sort(sorters[S.resSort]);
+  const jcell = (j, f) => j ? `${j[f]}<span class="jn">${esc(j.name)}${j.role === 'head' ? ' (HJ)' : ''}</span>` : '<span class="mut">—</span>';
+  const awardTxt = (aw) => Object.entries(aw).map(([k, c]) => `<span class="chip part">${esc((AWARDS.find((a) => a.key === k) || {}).title || k)} ×${c}</span>`).join(' ') || '<span class="mut">—</span>';
+  const tools = `<div class="tools">
+    <div class="seg" id="resRoom">${[0, ...Array.from({ length: ROOMS }, (_, i) => i + 1)].map((r) => `<button data-r="${r}" class="${S.resRoom === r ? 'on' : ''}">${r ? 'Комната ' + r : 'Все'}</button>`).join('')}</div>
+    <div class="seg" id="resSort">${[['n', 'По расписанию'], ['ip', 'ИП ↓'], ['rd', 'ДР ↓'], ['cv', 'Core Values ↓']].map(([k, t]) => `<button data-s="${k}" class="${S.resSort === k ? 'on' : ''}">${t}</button>`).join('')}</div>
+    <a class="btn ghost" style="margin-left:auto;text-decoration:none" href="/api/results.csv?token=${encodeURIComponent(S.token)}">⬇ Скачать CSV (Excel)</a></div>`;
+  const toggle = `<div class="tools"><div class="seg" id="resMode"><button data-m="0" class="${S.resDetail ? '' : 'on'}">Итоговая таблица</button><button data-m="1" class="${S.resDetail ? 'on' : ''}">Подробно по судьям</button></div></div>`;
+  const pc = (v, sum, max, cls) => `<td class="pct ${cls}">${f2(v)}%<span class="jn">${sum}/${max}</span></td>`;
+  const simple = `<div class="tablewrap"><table class="res" style="min-width:760px"><thead><tr>
+    <th style="text-align:left">Команда</th><th>Время</th><th class="ip grp">Инновационный проект<span class="jn">из 25%</span></th><th class="rd grp">Дизайн робота<span class="jn">из 25%</span></th>
+    <th class="cv grp">⚙ Core Values<span class="jn">из 25%</span></th><th class="grp" style="color:var(--text)">Инн. проект + Дизайн робота<span class="jn">из 50%</span></th><th class="grp">Номинации</th><th>Статус</th></tr></thead><tbody>
+    ${rows.map((r) => `<tr><td class="team">${esc(r.team)}<span class="jn">Комната ${r.room} · №${r.n}</span></td><td>${esc(r.time)}</td>
+      ${pc(r.ipPct, r.ipSum, r.maxPerRubric, 'ip grp')}${pc(r.rdPct, r.rdSum, r.maxPerRubric, 'rd grp')}${pc(r.cvPct, r.gearSum, r.maxGear, 'cv grp')}
+      <td class="pct grp" style="font-size:17px">${f2(r.ipPct + r.rdPct)}%<span class="jn">${r.ipSum + r.rdSum}/${r.maxPerRubric * 2}</span></td>
+      <td class="grp" style="white-space:normal">${awardTxt(r.awards)}</td>
+      <td>${r.complete ? '<span class="chip full">✓ готово</span>' : r.judges.length ? '<span class="chip part">в процессе</span>' : '<span class="chip">нет оценок</span>'}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  const table = `<div class="tablewrap"><table class="res"><thead>
+    <tr><th rowspan="2">№</th><th rowspan="2">Время</th><th rowspan="2">Комн.</th><th rowspan="2" style="text-align:left">Команда</th>
+      <th colspan="4" class="ip grp">Инновационный проект</th><th colspan="4" class="rd grp">Дизайн робота</th><th colspan="2" class="cv grp">⚙ Core Values</th><th rowspan="2" class="grp">Номинации</th><th rowspan="2">Статус</th></tr>
+    <tr><th class="grp">Судья 1</th><th>Судья 2</th><th>Сумма</th><th>Итог, %</th><th class="grp">Судья 1</th><th>Судья 2</th><th>Сумма</th><th>Итог, %</th><th class="grp">Сумма</th><th>Итог, %</th></tr></thead><tbody>
+    ${rows.map((r) => { const [a, b] = r.judges; return `<tr>
+      <td>${r.n}</td><td>${esc(r.time)}</td><td>${r.room}</td><td class="team">${esc(r.team)}</td>
+      <td class="grp">${jcell(a, 'ip')}</td><td>${jcell(b, 'ip')}</td><td>${r.ipSum}/${r.maxPerRubric}</td><td class="pct ip">${f2(r.ipPct)}</td>
+      <td class="grp">${jcell(a, 'rd')}</td><td>${jcell(b, 'rd')}</td><td>${r.rdSum}/${r.maxPerRubric}</td><td class="pct rd">${f2(r.rdPct)}</td>
+      <td class="grp">${r.gearSum}/${r.maxGear}</td><td class="pct cv">${f2(r.cvPct)}</td>
+      <td class="grp" style="white-space:normal">${awardTxt(r.awards)}</td>
+      <td>${r.complete ? '<span class="chip full">✓ готово</span>' : r.judges.length ? '<span class="chip part">в процессе</span>' : '<span class="chip">нет оценок</span>'}</td></tr>`; }).join('')}
+    </tbody></table></div>`;
+  const formula = `<div class="formula">ИП / ДР итог = (баллы судьи 1 + баллы судьи 2) ÷ 80 × 25%. Каждый судья ставит до 40 баллов на рубрику (10 строк × 4).<br>
+    ⚙ Core Values — баллы строк с шестерёнкой из обеих рубрик (до 20 + 20 у каждого судьи): сумма ÷ 80 × 25%. Шестерёнки при этом остаются в баллах ИП и ДР.</div>`;
+  const keepScroll = $('.tablewrap')?.scrollLeft;
+  $('#main').innerHTML = toggle + tools + (S.resDetail ? table : simple) + formula;
+  if (keepScroll) $('.tablewrap').scrollLeft = keepScroll;
+  $$('#resMode button').forEach((b) => b.onclick = () => { S.resDetail = b.dataset.m === '1'; renderResults(); });
+  $$('#resRoom button').forEach((b) => b.onclick = () => { S.resRoom = Number(b.dataset.r); renderResults(); });
+  $$('#resSort button').forEach((b) => b.onclick = () => { S.resSort = b.dataset.s; renderResults(); });
+}
+
+// ---------- настройки (организатор) ----------
+async function renderAdmin() {
+  const [sch, us] = await Promise.all([api('/api/schedule'), api('/api/users')]);
+  const s = sch.schedule;
+  const lunchAfter = (s.breaks || [])[0];
+  $('#main').innerHTML = `<div class="adm">
+    <div class="box"><h3>Расписание судейства</h3>
+      <div class="sched-row" style="color:var(--muted);font-size:13px;font-weight:700"><div>№</div><div>Время</div>${Array.from({ length: ROOMS }, (_, i) => `<div>Комната ${i + 1}</div>`).join('')}</div>
+      <div id="schedRows">${s.slots.map((x) => schedRow(x)).join('')}</div>
+      <div class="tools" style="margin-top:10px"><button class="btn ghost" id="addSlot">+ Добавить слот</button><button class="btn ghost" id="delSlot">− Удалить последний</button>
+        <span style="color:var(--muted);font-size:13px">Перерыв после слота №</span><input class="i" id="brAfter" style="width:70px" value="${lunchAfter ? lunchAfter.after : ''}">
+        <input class="i" id="brLabel" style="width:300px" value="${esc(lunchAfter ? lunchAfter.label : '')}" placeholder="Текст перерыва">
+        <button class="btn y" id="saveSched" style="margin-left:auto">Сохранить расписание</button></div>
+      <div style="color:var(--muted);font-size:13px">Внимание: оценки привязаны к номеру слота и комнате — если менять порядок после начала судейства, оценки останутся за старым слотом.</div></div>
+    <div class="box"><h3>Аккаунты</h3><table class="users"><tr><th>Имя</th><th>Логин</th><th>Роль</th><th>Комната</th><th></th></tr>
+      ${us.users.sort((a, b) => (a.room || 0) - (b.room || 0) || (a.role === 'head' ? -1 : 1)).map((u) => `<tr><td>${esc(u.name)}</td><td>${esc(u.username)}</td><td><span class="pill ${u.role}">${ROLE[u.role]}</span></td><td>${u.room || '—'}</td>
+        <td>${u.id === S.user.id ? '' : `<button class="btn ghost" data-del="${u.id}" style="padding:3px 10px">Удалить</button>`}</td></tr>`).join('')}</table></div></div>`;
+  $('#addSlot').onclick = () => { const n = $$('#schedRows .sched-row').length + 1; $('#schedRows').insertAdjacentHTML('beforeend', schedRow({ n, time: '', teams: [] })); };
+  $('#delSlot').onclick = () => { const r = $$('#schedRows .sched-row'); r[r.length - 1]?.remove(); };
+  $('#saveSched').onclick = async () => {
+    const slots = $$('#schedRows .sched-row').map((row) => { const i = $$('input', row).map((x) => x.value.trim()); return { time: i[0], teams: i.slice(1) }; });
+    const after = Number($('#brAfter').value);
+    try { await api('/api/schedule', { method: 'PUT', body: { slots, breaks: after ? [{ after, label: $('#brLabel').value }] : [] } }); toast('Расписание сохранено'); refresh(); }
+    catch (e) { toast(e.message); }
+  };
+  $$('[data-del]').forEach((b) => b.onclick = async () => {
+    if (!confirm('Удалить аккаунт? Его оценки останутся в таблице.')) return;
+    try { await api('/api/users/' + b.dataset.del, { method: 'DELETE' }); renderAdmin(); } catch (e) { toast(e.message); }
+  });
+}
+function schedRow(x) {
+  return `<div class="sched-row"><div class="n">${x.n}</div><input class="i" value="${esc(x.time)}" placeholder="11:00–11:30">${Array.from({ length: ROOMS }, (_, i) => `<input class="i" value="${esc(x.teams[i] || '')}" placeholder="Команда">`).join('')}</div>`;
+}
+
+boot();
+</script>
+</body>
+</html>
