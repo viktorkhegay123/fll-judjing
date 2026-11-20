@@ -1,9 +1,9 @@
 FROM node:22-alpine
 WORKDIR /app
-COPY package.json server.js ./
+COPY package.json local-server.js ./
 COPY public ./public
 COPY lib ./lib
 ENV NODE_ENV=production PORT=3000 DATA_FILE=/data/data.json
 VOLUME ["/data"]
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["node", "local-server.js"]

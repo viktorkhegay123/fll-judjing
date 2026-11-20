@@ -1,4 +1,4 @@
-// Локальный запуск (ноутбук / Wi-Fi): node server.js
+// Локальный запуск (ноутбук / Wi-Fi): node local-server.js
 // На Vercel этот файл не используется — там работает api/index.js.
 const http = require('http');
 const fs = require('fs');
